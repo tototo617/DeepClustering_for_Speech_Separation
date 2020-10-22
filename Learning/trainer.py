@@ -88,7 +88,6 @@ class Trainer():
         self.dpcl.eval()
         num_batchs = len(self.val_dataloader)
         total_loss = 0.0
-        logging.info('epoch{}:validation'.format(epoch))
         with torch.no_grad():
             for log_pow_mix, class_targets, non_silent in tqdm(self.val_dataloader):
                 log_pow_mix = log_pow_mix.to(self.device)
@@ -122,9 +121,9 @@ class Trainer():
             while self.cur_epoch < self.total_epoch:
                 self.cur_epoch += 1
                 t_loss = self.train(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(self.epoch,t_loss))
+                logging.info('epoch{0}:tvalid_loss{1}'.format(self.cur_epoch,t_loss))
                 v_loss = self.validation(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(self.epoch,v_loss))
+                logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
 
                 writer.add_scalar('t_loss', t_loss, self.cur_epoch)
                 writer.add_scalar('v_loss', v_loss, self.cur_epoch)
