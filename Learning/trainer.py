@@ -110,6 +110,7 @@ class Trainer():
 
         dt_now = datetime.datetime.now()
         writer = tbx.SummaryWriter("tbx/" + dt_now.isoformat())
+        os.makedirs('./checkpoint/DeepClustering_config', exist_ok=True)
         logging.basicConfig(filename='./checkpoint/DeepClustering_config/train_log.log', level=logging.DEBUG)
         logging.info(self.config)
         with torch.cuda.device(self.device):

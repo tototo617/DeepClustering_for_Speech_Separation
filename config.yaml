@@ -4,6 +4,7 @@ gpu: cuda:1
 multi_gpu: False
 
 # dir_wav_root: /data1/h_munakata/wsj0/2speakers/min/
+# dir_wav_root: /data1/h_munakata/RWCP-SSD_wsj0_2speakers
 dir_wav_root: /data1/h_munakata/wsj0/2speakers/min/
 dataloader:
   train:
@@ -61,5 +62,5 @@ optim:
   clip_norm: 200
 
 resume:
-  state: True
+  state: False
   path: ./checkpoint/backups/2speaker_backup/DeepClustering_config/last.pt
