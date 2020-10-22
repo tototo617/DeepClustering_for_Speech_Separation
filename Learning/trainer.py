@@ -110,6 +110,7 @@ class Trainer():
 
         dt_now = datetime.datetime.now()
         writer = tbx.SummaryWriter("tbx/" + dt_now.isoformat())
+        os.makedirs('./checkpoint/DeepClustering_config',exist_ok=True)
         logging.basicConfig(filename='./checkpoint/DeepClustering_config/train_log.log', level=logging.DEBUG)
         logging.info(self.config)
         with torch.cuda.device(self.device):
@@ -121,9 +122,9 @@ class Trainer():
             while self.cur_epoch < self.total_epoch:
                 self.cur_epoch += 1
                 t_loss = self.train(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(epoch,t_loss))
+                logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 v_loss = self.validation(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(epoch,v_loss))
+                logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
 
                 writer.add_scalar('t_loss', t_loss, self.cur_epoch)
                 writer.add_scalar('v_loss', v_loss, self.cur_epoch)
