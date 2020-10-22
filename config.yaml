@@ -10,7 +10,7 @@ dataloader:
     path_scp_mix: ./scp/tr_mix.scp
     path_scp_targets: [./scp/tr_s1.scp,
                         ./scp/tr_s2.scp]
-    mask: IBM
+    mask: WFM
 
   val:
     path_scp_mix: ./scp/cv_mix.scp
@@ -26,7 +26,7 @@ test:
                     ./scp/tt_s2.scp]
   path_model: /home/h_munakata/DeepClustering_for_Speech_Separation/checkpoint/DeepClustering_config/best.pt
   path_separated: ./result_test
-  type_mask: hard
+  type_mask: soft
   eval_index: SI-SDR
 
 transform:
@@ -61,5 +61,5 @@ optim:
   clip_norm: 200
 
 resume:
-  state: True
+  state: False
   path: ./checkpoint/backups/2speaker_backup/DeepClustering_config/last.pt
