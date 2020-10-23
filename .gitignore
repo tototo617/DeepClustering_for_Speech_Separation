@@ -2,6 +2,12 @@ checkpoint
 result_test
 scp
 tbx
+<<<<<<< HEAD
 .vscode
 dict_normalization.py
 Learning/__pycache__
+=======
+dict_normalize.ark
+Learning/__pycache__
+
+>>>>>>> ba48942b5d1842eb3ac1675740986017e11ffae3

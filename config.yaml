@@ -61,5 +61,10 @@ optim:
   clip_norm: 200
 
 resume:
+<<<<<<< HEAD
   state: False
   path: ./checkpoint/backups/2speaker_backup/DeepClustering_config/last.pt
+=======
+  state: True
+  path: ./checkpoint/DeepClustering_config/last.pt
+>>>>>>> ba48942b5d1842eb3ac1675740986017e11ffae3
