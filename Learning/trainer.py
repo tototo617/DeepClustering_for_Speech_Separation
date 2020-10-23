@@ -56,6 +56,8 @@ class Trainer():
             self.cur_epoch = ckp['epoch']
             self.dpcl.load_state_dict(ckp['model_state_dict'])
             self.optimizer.load_state_dict(ckp['optim_state_dict'])
+
+            print('training resume epoch:',self.cur_epoch)
         
 
     def train(self, epoch):
@@ -107,6 +109,7 @@ class Trainer():
     def run(self):
         train_loss = []
         val_loss = []
+        print('cur_epoch',self.cur_epoch)
 
         dt_now = datetime.datetime.now()
         writer = tbx.SummaryWriter("tbx/" + dt_now.isoformat())
@@ -123,8 +126,10 @@ class Trainer():
                 self.cur_epoch += 1
                 t_loss = self.train(self.cur_epoch)
                 logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
+                print('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 v_loss = self.validation(self.cur_epoch)
                 logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
+                print('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
 
                 writer.add_scalar('t_loss', t_loss, self.cur_epoch)
                 writer.add_scalar('v_loss', v_loss, self.cur_epoch)
@@ -141,12 +146,13 @@ class Trainer():
                 
                 if no_improve == self.early_stop:
                     break
-            self.save_checkpoint(self.cur_epoch,best=False)
+                self.save_checkpoint(self.cur_epoch,best=False)
         
         writer.close()
 
 
     def save_checkpoint(self, epoch, best=True):
+        print('save model epoch:',epoch)
         os.makedirs(os.path.join(self.checkpoint,self.name),exist_ok=True)
         torch.save({
             'epoch': epoch,
