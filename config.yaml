@@ -48,7 +48,7 @@ network:
   activation: Tanh
 
 train:
-  epoch: 200
+  epoch: 400
   early_stop: 10
   path: checkpoint
   is_gpu: True
