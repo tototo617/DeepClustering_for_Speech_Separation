@@ -54,13 +54,11 @@ class Separation():
         # print(non_silent)
         # mix_emb = (mix_emb.T*non_silent).T
         # N
-        mix_cluster = self.kmeans.fit_predict(mix_emb)
-        self.gmm.fit(mix_emb)
-        mix_cluster_soft = self.gmm.predict_proba(mix_emb)
         targets_mask = []
 
         # hard clustering
         if self.type_mask == 'hard':
+            mix_cluster = self.kmeans.fit_predict(mix_emb)
             for i in range(self.num_spks):
                 mask = (mix_cluster == i)
                 mask = mask.reshape(T,F)
@@ -68,6 +66,8 @@ class Separation():
 
         # soft clustering
         elif self.type_mask == 'soft':
+            self.gmm.fit(mix_emb)
+            mix_cluster_soft = self.gmm.predict_proba(mix_emb)
             for i in range(self.num_spks):
                 mask = mix_cluster_soft[:,i]
                 mask = mask.reshape(T,F)
