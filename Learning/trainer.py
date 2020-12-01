@@ -124,17 +124,11 @@ class Trainer():
             while self.cur_epoch < self.total_epoch:
                 self.cur_epoch += 1
                 t_loss = self.train(self.cur_epoch)
-<<<<<<< HEAD
-                logging.info('epoch{0}:tvalid_loss{1}'.format(self.cur_epoch,t_loss))
-                v_loss = self.validation(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
-=======
                 logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 print('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 v_loss = self.validation(self.cur_epoch)
                 logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
                 print('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
->>>>>>> ba48942b5d1842eb3ac1675740986017e11ffae3
 
                 writer.add_scalar('t_loss', t_loss, self.cur_epoch)
                 writer.add_scalar('v_loss', v_loss, self.cur_epoch)

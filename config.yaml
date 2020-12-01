@@ -1,16 +1,26 @@
 name: DeepClustering_config
 num_spks: 2
-gpu: cuda:1
+gpu: cuda:0
 multi_gpu: False
 
 # dir_wav_root: /data1/h_munakata/wsj0/2speakers/min/
-dir_wav_root: /data1/h_munakata/wsj0/2speakers/min/
+
+# dir_wav_root: /data1/h_munakata/test_data_augment/phone_phone/
+# dir_wav_root: /data1/h_munakata/test_data_augment/phone_whitsle/
+# dir_wav_root: /data1/h_munakata/test_data_augment/whitsle_whitsle/
+# dir_wav_root: /data1/h_munakata/test_data_augment/wsj_phone/
+# dir_wav_root: /data1/h_munakata/test_data_augment/wsj_whitsle/
+
+
+dir_wav_root: /data1/h_munakata/test_data_4_augment_speech
+# dir_wav_root: /data1/h_munakata/data_augmentation/augment_block/
+
 dataloader:
   train:
     path_scp_mix: ./scp/tr_mix.scp
     path_scp_targets: [./scp/tr_s1.scp,
                         ./scp/tr_s2.scp]
-    mask: WFM
+    mask: IBM
 
   val:
     path_scp_mix: ./scp/cv_mix.scp
@@ -24,9 +34,9 @@ test:
   path_scp_mix: ./scp/tt_mix.scp
   path_scp_targets: [./scp/tt_s1.scp,
                     ./scp/tt_s2.scp]
-  path_model: /home/h_munakata/DeepClustering_for_Speech_Separation/checkpoint/DeepClustering_config/best.pt
+  path_model: ./checkpoint/backups/data_augment_removed/best.pt
   path_separated: ./result_test
-  type_mask: soft
+  type_mask: hard
   eval_index: SI-SDR
 
 transform:
@@ -37,7 +47,6 @@ transform:
   center: True
   sr: 8000
   mask_threshold : 40
-  path_normalize: ./dict_normalize.ark
 
 network:
   hidden_size: 300
@@ -48,7 +57,7 @@ network:
   activation: Tanh
 
 train:
-  epoch: 200
+  epoch: 600
   early_stop: 10
   path: checkpoint
   is_gpu: True
@@ -61,10 +70,5 @@ optim:
   clip_norm: 200
 
 resume:
-<<<<<<< HEAD
   state: False
-  path: ./checkpoint/backups/2speaker_backup/DeepClustering_config/last.pt
-=======
-  state: True
-  path: ./checkpoint/DeepClustering_config/last.pt
->>>>>>> ba48942b5d1842eb3ac1675740986017e11ffae3
+  path: /home/h_munakata/DeepClustering_for_Speech_Separation/checkpoint/backups/data_augment_augmented/best.pt

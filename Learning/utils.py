@@ -1,6 +1,7 @@
 import os
 import yaml
 import librosa
+import soundfile as sf
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
@@ -14,8 +15,10 @@ class wav_processor:
         self.center = config['transform']['center']
         self.sr = config['transform']['sr']
         self.mask_threshold = config['transform']['mask_threshold']
-        path_normalize = config['transform']['path_normalize']
-        self.normalize = pickle.load(open(path_normalize, 'rb'))
+        path_model_save = os.path.dirname(config['test']['path_model'])
+        path_normalize = path_model_save+'/dict_normalize.ark'
+        if os.path.exists(path_normalize):
+            self.normalize = pickle.load(open(path_normalize, 'rb'))
 
     def stft(self,y):
         Y = librosa.stft(y, n_fft=self.n_fft, hop_length=self.hop_length,
@@ -53,7 +56,7 @@ class wav_processor:
     def write_wav(self,dir_path, filename, y):
         os.makedirs(dir_path, exist_ok=True)
         file_path = os.path.join(dir_path, filename)
-        librosa.output.write_wav(file_path, y, self.sr)
+        sf.write(file_path, y, self.sr)
 
     def read_scp(self,scp_path):
         files = open(scp_path, 'r')
@@ -80,15 +83,16 @@ class wav_processor:
 
     def calc_si_sdr(self,Y,Y_hat):
 
-        Y_sum = np.sum(np.sum((np.abs(Y))**2,1),0)
-        Y_hat_sum = np.sum(np.sum((np.abs(Y_hat))**2,1),0)
+        y = self.istft(Y)
+        y_hat = self.istft(Y_hat)
         
-        c = (Y_sum/Y_hat_sum)**(0.5)
+        alpha = np.inner(y,y_hat)/np.inner(y,y)
 
-        dist = np.sum(np.sum((np.abs(Y) - c*np.abs(Y_hat))**2,1),0)
-        sdr = 10*np.log10(Y_sum/dist)
+        e_target = np.inner(alpha*y,alpha*y)
+        e_res = np.inner(alpha*y - y_hat ,alpha*y - y_hat)
 
-        return sdr
+        si_sdr = 10*np.log10(e_target/e_res)
+        return si_sdr
 
     
     def eval_sdr(self,Y_list,Y_hat_list):
@@ -99,6 +103,20 @@ class wav_processor:
             sdr_i = -np.inf
             for j in range(num_spks):
                 sdr_j = self.calc_sdr(Y_list[i], Y_hat_list[j])
+                if sdr_j > sdr_i:
+                    sdr_i = sdr_j
+            sdr.append(sdr_i)
+
+        return sdr
+
+    def eval_si_sdr(self,Y_list,Y_hat_list):
+        num_spks = len(Y_list)
+
+        sdr = []
+        for i in range(num_spks):
+            sdr_i = -np.inf
+            for j in range(num_spks):
+                sdr_j = self.calc_si_sdr(Y_list[i], Y_hat_list[j])
                 if sdr_j > sdr_i:
                     sdr_i = sdr_j
             sdr.append(sdr_i)

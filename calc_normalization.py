@@ -3,6 +3,7 @@ import yaml
 from tqdm import tqdm
 import pickle
 from Learning import utils
+import os
 
 if __name__=="__main__":
     print('calc normalizing parameters')
@@ -31,7 +32,10 @@ if __name__=="__main__":
 
     std_f = np.sqrt(var_f - mean_f**2)
 
-    with open(config['transform']['path_normalize'], "wb") as f:
+    path_model_save = "./checkpoint/DeepClustering_config"
+    path_normalize = path_model_save+'/dict_normalize.ark'
+
+    with open(path_normalize, "wb") as f:
         normalize_dict = {"mean": mean_f, "std": std_f}
         pickle.dump(normalize_dict, f)
     print("Global mean: {}".format(mean_f))

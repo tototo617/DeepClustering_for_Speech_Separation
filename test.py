@@ -54,13 +54,11 @@ class Separation():
         # print(non_silent)
         # mix_emb = (mix_emb.T*non_silent).T
         # N
-        mix_cluster = self.kmeans.fit_predict(mix_emb)
-        self.gmm.fit(mix_emb)
-        mix_cluster_soft = self.gmm.predict_proba(mix_emb)
         targets_mask = []
 
         # hard clustering
         if self.type_mask == 'hard':
+            mix_cluster = self.kmeans.fit_predict(mix_emb)
             for i in range(self.num_spks):
                 mask = (mix_cluster == i)
                 mask = mask.reshape(T,F)
@@ -68,6 +66,8 @@ class Separation():
 
         # soft clustering
         elif self.type_mask == 'soft':
+            self.gmm.fit(mix_emb)
+            mix_cluster_soft = self.gmm.predict_proba(mix_emb)
             for i in range(self.num_spks):
                 mask = mix_cluster_soft[:,i]
                 mask = mask.reshape(T,F)
@@ -81,6 +81,9 @@ class Separation():
         logging.basicConfig(filename=self.path_separated+'/logger.log', level=logging.DEBUG)
         logging.info(self.dir_wav_root)
         logging.info(self.path_model)
+
+        eval_idx = config['test']['eval_index']
+        logging.info(eval_idx)
 
         if sdr_eval:
             path_scp_targets = config['test']['path_scp_targets']
@@ -105,9 +108,14 @@ class Separation():
                 Y_targets = [self.wp.stft(y_target) for y_target in y_targets]
 
                 logging.info(key)
-                sdr = self.wp.eval_sdr(Y_targets,Y_separated)
+                if eval_idx == 'SDR':
+                    sdr = self.wp.eval_sdr(Y_targets,Y_separated)
+                elif eval_idx == 'SI-SDR':
+                    sdr = self.wp.eval_si_sdr(Y_targets,Y_separated)
+                else:
+                    print("check setting:['test']['path_scp_targets']")
                 list_sdr.append(sdr)
-                logging.info(self.wp.eval_sdr(Y_targets,Y_separated))
+                logging.info(sdr)
             for i,Y_separated_i in enumerate(Y_separated):
                 y_separated_i = self.wp.istft(Y_separated_i)
                 self.wp.write_wav(self.path_separated+'/separated',key.replace('.wav','') + '_'
