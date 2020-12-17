@@ -80,17 +80,17 @@ class wav_dataset(Dataset):
 
 
 def padding(batch):
-    batch_log_pow_mix,batch_class_targets,batch_non_silent = [],[],[]
-    for log_pow_mix,class_targets,non_silent in batch:
-        batch_log_pow_mix.append(torch.tensor(log_pow_mix,dtype=torch.float32))
-        batch_class_targets.append(torch.tensor(class_targets,dtype=torch.int64))
-        batch_non_silent.append(torch.tensor(non_silent,dtype=torch.float32))
+    b_logpow_mix,b_masks,b_non_sil = [],[],[]
+    for logpow_mix,masks,non_sil in batch:
+        b_logpow_mix.append(torch.tensor(logpow_mix,dtype=torch.float32))
+        b_masks.append(torch.tensor(masks,dtype=torch.int64))
+        b_non_sil.append(torch.tensor(non_sil,dtype=torch.float32))
 
-    batch_log_pow_mix = pad_sequence(batch_log_pow_mix, batch_first=True)
-    batch_class_targets = pad_sequence(batch_class_targets, batch_first=True)
-    batch_non_silent = pad_sequence(batch_non_silent, batch_first=True)
+    b_logpow_mix = pad_sequence(b_logpow_mix, batch_first=True)
+    b_masks = pad_sequence(b_masks, batch_first=True)
+    b_non_sil = pad_sequence(b_non_sil, batch_first=True)
 
-    return batch_log_pow_mix,batch_class_targets,batch_non_silent
+    return b_logpow_mix, b_masks, b_non_sil
 
 
 def make_dataloader(config, path_scp_mix, path_scp_targets, path_model):

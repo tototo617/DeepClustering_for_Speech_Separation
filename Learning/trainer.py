@@ -64,7 +64,6 @@ class Trainer():
             if mode=="train":
                 self.optimizer.zero_grad()
                 epoch_loss.backward()
-                del epoch_loss
                 if self.clip_norm:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(),self.clip_norm)
                 self.optimizer.step()
