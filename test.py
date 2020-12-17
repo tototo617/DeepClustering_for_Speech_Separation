@@ -6,22 +6,22 @@ from Learning.dataloader import transform,padding
 import numpy as np
 import os
 import yaml
-import logging
 from tqdm import tqdm
 import datetime
+import csv
 
 
 class Separation():
     def __init__(self,config):
         self.wp = utils.wav_processor(config)
-        self.dpcl = model.DeepClustering(config)
+        self.model = model.DeepClustering(config)
         self.device = torch.device(config['gpu'])
         print('Processing on',config['gpu'])
 
         self.path_model = config['test']['path_model']
         ckp = torch.load(self.path_model,map_location=self.device)
-        self.dpcl.load_state_dict(ckp['model_state_dict'])
-        self.dpcl.eval()
+        self.model.load_state_dict(ckp['model_state_dict'])
+        self.model.eval()
 
         self.dir_wav_root = config['dir_wav_root']
         path_scp_mix = config['test']['path_scp_mix']
@@ -31,11 +31,35 @@ class Separation():
 
         self.num_spks = config['num_spks']
         self.kmeans = KMeans(n_clusters=self.num_spks)
-        self.gmm = GMM(n_components=self.num_spks, max_iter=1000)
+        self.gmm = GMM(n_components=self.num_spks, max_iter=100)
         dt_now = datetime.datetime.now()
         self.path_separated = config['test']['path_separated'] + '/'+str(dt_now.isoformat())
         self.type_mask = config['test']['type_mask']
-        
+
+
+        os.makedirs(self.path_separated,exist_ok=True)
+        self.path_csv = os.path.join(self.path_separated,"log.csv")
+        self.eval = True if config['test']['eval_index'] != None else False 
+        self.eval_idx = config['test']['eval_index'] if self.eval else None
+
+        with open(self.path_csv, 'w') as f:
+            writer = csv.writer(f)
+            conditions = [self.path_model,self.dir_wav_root,self.eval_idx]
+            writer.writerow(conditions)
+
+            header = ["key"]
+            if self.eval_idx == 'SDR':
+                for i in range(self.num_spks):
+                    header.append("SDR_{0}".format(str(i+1)))
+                for i in range(self.num_spks):
+                    header.append("SDRi_{0}".format(str(i+1)))
+            elif self.eval_idx == 'SI-SDR':
+                for i in range(self.num_spks):
+                    header.append("SI-SDR_{0}".format(str(i+1)))
+                for i in range(self.num_spks):
+                    header.append("SI-SDRi_{0}".format(str(i+1)))
+            writer.writerow(header)
+
 
 
     def make_mask(self, wave, non_silent):
@@ -45,7 +69,7 @@ class Separation():
         # TF x D
 
 
-        mix_emb = self.dpcl(torch.tensor(
+        mix_emb = self.model(torch.tensor(
             wave, dtype=torch.float32), is_train=False)
         mix_emb = mix_emb.detach().numpy()
         # N x D
@@ -75,23 +99,28 @@ class Separation():
 
         return targets_mask
 
+
+    def eval_separate(self,key,Y_separated,Y_targets,Y_mix):
+        if self.eval_idx == 'SDR':
+            SDR = self.wp.eval_SDR(Y_targets,Y_separated)
+            with open(self.path_csv, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([key]+SDR,SI+SDRi)
+        elif self.eval_idx == 'SI-SDR':
+            SI_SDR,SI_SDRi = self.wp.eval_SI_SDR(Y_targets,Y_separated,Y_mix)
+
+            with open(self.path_csv, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([key]+SI_SDR+SI_SDRi)
+
+
     def run(self):
-        sdr_eval=True 
-        os.makedirs(self.path_separated,exist_ok=True)
-        logging.basicConfig(filename=self.path_separated+'/logger.log', level=logging.DEBUG)
-        logging.info(self.dir_wav_root)
-        logging.info(self.path_model)
-
-        eval_idx = config['test']['eval_index']
-        logging.info(eval_idx)
-
-        if sdr_eval:
+        if self.eval:
             path_scp_targets = config['test']['path_scp_targets']
             scp_targets = [self.wp.read_scp(path_scp_target) \
                     for path_scp_target in path_scp_targets]
 
 
-        list_sdr=[]
         for key in tqdm(self.scp_mix.keys()):
             y_mix = self.wp.read_wav(self.scp_mix[key])
 
@@ -103,24 +132,18 @@ class Separation():
             for i in range(len(target_mask)):
                 Y_separated.append(target_mask[i] * Y_mix)
 
-            if sdr_eval:
+            if self.eval:
                 y_targets = [self.wp.read_wav(scp_target[key]) for scp_target in scp_targets]
                 Y_targets = [self.wp.stft(y_target) for y_target in y_targets]
 
-                logging.info(key)
-                if eval_idx == 'SDR':
-                    sdr = self.wp.eval_sdr(Y_targets,Y_separated)
-                elif eval_idx == 'SI-SDR':
-                    sdr = self.wp.eval_si_sdr(Y_targets,Y_separated)
-                else:
-                    print("check setting:['test']['path_scp_targets']")
-                list_sdr.append(sdr)
-                logging.info(sdr)
+                self.eval_separate(key,Y_separated,Y_targets,Y_mix)
+
+
             for i,Y_separated_i in enumerate(Y_separated):
                 y_separated_i = self.wp.istft(Y_separated_i)
                 self.wp.write_wav(self.path_separated+'/separated',key.replace('.wav','') + '_'
                                     + str(i+1) + '.wav',y_separated_i)
-        logging.info('mean_sdr = '+str(np.mean(list_sdr)))
+
 
 
 

@@ -127,8 +127,8 @@ class Trainer():
                 logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 print('epoch{0}:train_loss{1}'.format(self.cur_epoch,t_loss))
                 v_loss = self.validation(self.cur_epoch)
-                logging.info('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
-                print('epoch{0}:train_loss{1}'.format(self.cur_epoch,v_loss))
+                logging.info('epoch{0}:valid_loss{1}'.format(self.cur_epoch,v_loss))
+                print('epoch{0}:valid_loss{1}'.format(self.cur_epoch,v_loss))
 
                 writer.add_scalar('t_loss', t_loss, self.cur_epoch)
                 writer.add_scalar('v_loss', v_loss, self.cur_epoch)

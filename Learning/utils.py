@@ -81,8 +81,7 @@ class wav_processor:
 
         return sdr
 
-    def calc_si_sdr(self,Y,Y_hat):
-
+    def calc_SI_SDR(self,Y,Y_hat):
         y = self.istft(Y)
         y_hat = self.istft(Y_hat)
         
@@ -109,18 +108,26 @@ class wav_processor:
 
         return sdr
 
-    def eval_si_sdr(self,Y_list,Y_hat_list):
+    def eval_SI_SDR(self,Y_list,Y_hat_list,Y_mix):
         num_spks = len(Y_list)
 
-        sdr = []
+        SI_SDR = []
         for i in range(num_spks):
-            sdr_i = -np.inf
+            SI_SDR_max = -np.inf
             for j in range(num_spks):
-                sdr_j = self.calc_si_sdr(Y_list[i], Y_hat_list[j])
-                if sdr_j > sdr_i:
-                    sdr_i = sdr_j
-            sdr.append(sdr_i)
+                SI_SDR_j = self.calc_SI_SDR(Y_list[i], Y_hat_list[j])
+                if SI_SDR_max < SI_SDR_j:
+                    SI_SDR_max = SI_SDR_j
+            SI_SDR.append(SI_SDR_max)
 
-        return sdr
+        SI_SDRi = []
+
+        for i in range(num_spks):
+            SI_SDR_base = self.calc_SI_SDR(Y_list[i], Y_mix)
+            print(SI_SDR_base)
+            SI_SDRi.append(SI_SDR[i] - SI_SDR_base)
+        
+
+        return SI_SDR,SI_SDRi
 
 

@@ -5,14 +5,14 @@ multi_gpu: False
 
 # dir_wav_root: /data1/h_munakata/wsj0/2speakers/min/
 
-# dir_wav_root: /data1/h_munakata/test_data_augment/phone_phone/
+dir_wav_root: /data1/h_munakata/test_data_augment/phone_phone/
 # dir_wav_root: /data1/h_munakata/test_data_augment/phone_whitsle/
 # dir_wav_root: /data1/h_munakata/test_data_augment/whitsle_whitsle/
 # dir_wav_root: /data1/h_munakata/test_data_augment/wsj_phone/
 # dir_wav_root: /data1/h_munakata/test_data_augment/wsj_whitsle/
 
 
-dir_wav_root: /data1/h_munakata/test_data_4_augment_speech
+# dir_wav_root: /data1/h_munakata/test_data_4_augment_speech
 # dir_wav_root: /data1/h_munakata/data_augmentation/augment_block/
 
 dataloader:
@@ -34,7 +34,10 @@ test:
   path_scp_mix: ./scp/tt_mix.scp
   path_scp_targets: [./scp/tt_s1.scp,
                     ./scp/tt_s2.scp]
-  path_model: ./checkpoint/backups/data_augment_removed/best.pt
+  # path_model: ./checkpoint/backups/data_augment_imbalance/best.pt
+  path_model: ./checkpoint/backups/data_augment_balance/best.pt
+  # path_model: ./checkpoint/backups/data_augment_augmented/best.pt
+  # path_model: ./checkpoint/backups/data_augment_removed/best.pt
   path_separated: ./result_test
   type_mask: hard
   eval_index: SI-SDR

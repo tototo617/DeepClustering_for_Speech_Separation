@@ -49,7 +49,7 @@ class transform():
                 for i,pow_target in enumerate(pow_targets):
                     class_targets[:,i] = (pow_target / (sum_pow_targets + eps)).reshape([T*F])
                         
-                    
+
             return log_pow_mix_normalized, class_targets, non_silent
 
         return log_pow_mix_normalized, non_silent
