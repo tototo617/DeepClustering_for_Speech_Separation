@@ -10,7 +10,7 @@ train:
   early_stop: 10
   path: ./checkpoint
   resume:
-    state: True
+    state: False
     path: ./checkpoint/backups/data_augment_imbalance/best.pt
 
   optim:
@@ -24,11 +24,6 @@ dataloader:
   batch_size: 20
   num_workers: 10
   shuffle: True
-
-test:
-  path_separated: ./result_test
-  clustering_type: hard
-  eval_index: SI-SDR
 
 transform:
   n_fft: 256

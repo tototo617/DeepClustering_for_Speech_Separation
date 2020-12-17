@@ -36,18 +36,17 @@ def train_scp(dir_dataset,num_spks):
             save_scp(dir_wav,scp_name)
             
 
-def test_scp(dir_dataset):
+def test_scp(dir_dataset,num_spks):
     print('making scp files')
 
-    for type_data in type_list:
-        dir_wav = dir_dataset + '/tt' + '/mix'
-        scp_name = '/tt_mix.scp'
-        save_scp(dir_wav,scp_name)
+    dir_wav = dir_dataset + '/tt' + '/mix'
+    scp_name = '/tt_mix.scp'
+    save_scp(dir_wav,scp_name)
 
-        for i in range(num_spks+1):
-            dir_wav = dir_dataset + '/tt/s{0}'.format(i+1)
-            scp_name = '/tt_s{0}.scp'.format(i+1)
-            save_scp(dir_wav,scp_name)
+    for i in range(num_spks):
+        dir_wav = dir_dataset + '/tt/s{0}'.format(i+1)
+        scp_name = '/tt_s{0}.scp'.format(i+1)
+        save_scp(dir_wav,scp_name)
 
 
 if __name__=="__main__":

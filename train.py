@@ -12,12 +12,15 @@ from Learning.dataloader import make_dataloader
 
 
 def train():
+    path_config = sys.argv[1]
+    path_wav_train = sys.argv[2]
+
     with open('config.yaml', 'r') as yml:
         config = yaml.safe_load(yml)
+        num_spks = config['num_spks']
+        
     dpcl = model.DeepClustering(config)
 
-    num_spks = config['num_spks']
-    path_wav_train = sys.argv[1]
     create_scp.train_scp(path_wav_train,num_spks)
     calc_normalize_params.dump_dict(config)
     
@@ -37,8 +40,6 @@ def train():
     valid_dataloader = make_dataloader(config, path_scp_mix_cv, path_scp_targets_cv, path_model)
 
     trainer = Trainer(dpcl, config)
-
-    del dpcl
 
     trainer.run(train_dataloader, valid_dataloader)
 

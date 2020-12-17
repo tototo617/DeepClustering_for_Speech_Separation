@@ -147,6 +147,7 @@ class Separation():
 if __name__ == "__main__":
     with open('config.yaml', 'r') as yml:
         config = yaml.safe_load(yml)
+        num_spks = config['num_spks']
 
     path_separated = "./result_test"
     path_wav_test = sys.argv[1]
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     clustering_type = sys.argv[3] # "hard" or "soft"
     eval_idx = sys.argv[4] # "SI-SDR" or "SDR"
 
-    create_scp.test_scp(path_wav_test)
+    create_scp.test_scp(path_wav_test,num_spks)
 
     separation = Separation(config,path_wav_test,path_model,clustering_type,eval_idx)
     separation.run()
