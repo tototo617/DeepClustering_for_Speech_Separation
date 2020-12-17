@@ -3,48 +3,48 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture as GMM
 from Learning import model,utils
 from Learning.dataloader import transform,padding
+import create_scp
 import numpy as np
 import os
 import yaml
 from tqdm import tqdm
 import datetime
 import csv
+import sys
 
 
 class Separation():
-    def __init__(self,config):
-        self.wp = utils.wav_processor(config)
+    def __init__(self, config, path_wav_test, path_model, dir_mix, clustering_type, eval_idx=None):
+
+        self.wp = utils.wav_processor(config,path_model)
         self.model = model.DeepClustering(config)
         self.device = torch.device(config['gpu'])
         print('Processing on',config['gpu'])
 
-        self.path_model = config['test']['path_model']
+        self.path_model = path_model
         ckp = torch.load(self.path_model,map_location=self.device)
         self.model.load_state_dict(ckp['model_state_dict'])
         self.model.eval()
 
-        self.dir_wav_root = config['dir_wav_root']
-        path_scp_mix = config['test']['path_scp_mix']
-        self.scp_mix = self.wp.read_scp(path_scp_mix)
-
-        self.trans = transform(config)
+        self.trans = transform(config,path_model)
 
         self.num_spks = config['num_spks']
         self.kmeans = KMeans(n_clusters=self.num_spks)
         self.gmm = GMM(n_components=self.num_spks, max_iter=100)
         dt_now = datetime.datetime.now()
-        self.path_separated = config['test']['path_separated'] + '/'+str(dt_now.isoformat())
-        self.type_mask = config['test']['type_mask']
+        self.path_separated = "./result_test" + '/'+str(dt_now.isoformat())
+        self.clustering_type = clustering_type
 
+        self.scp_mix = self.wp.read_scp("./scp/tt_mix.scp")
 
         os.makedirs(self.path_separated,exist_ok=True)
         self.path_csv = os.path.join(self.path_separated,"log.csv")
-        self.eval = True if config['test']['eval_index'] != None else False 
-        self.eval_idx = config['test']['eval_index'] if self.eval else None
+        self.eval = True if eval_idx != None else False 
+        self.eval_idx = eval_idx if self.eval else None
 
         with open(self.path_csv, 'w') as f:
             writer = csv.writer(f)
-            conditions = [self.path_model,self.dir_wav_root,self.eval_idx]
+            conditions = [self.path_model, path_wav_test ,self.eval_idx]
             writer.writerow(conditions)
 
             header = ["key"]
@@ -62,7 +62,7 @@ class Separation():
 
 
 
-    def make_mask(self, wave, non_silent):
+    def est_mask(self, wave, non_silent):
         '''
             input: T x F
         '''
@@ -81,7 +81,7 @@ class Separation():
         targets_mask = []
 
         # hard clustering
-        if self.type_mask == 'hard':
+        if self.clustering_type == 'hard':
             mix_cluster = self.kmeans.fit_predict(mix_emb)
             for i in range(self.num_spks):
                 mask = (mix_cluster == i)
@@ -89,7 +89,7 @@ class Separation():
                 targets_mask.append(mask)
 
         # soft clustering
-        elif self.type_mask == 'soft':
+        elif self.clustering_type == 'soft':
             self.gmm.fit(mix_emb)
             mix_cluster_soft = self.gmm.predict_proba(mix_emb)
             for i in range(self.num_spks):
@@ -116,17 +116,14 @@ class Separation():
 
     def run(self):
         if self.eval:
-            path_scp_targets = config['test']['path_scp_targets']
-            scp_targets = [self.wp.read_scp(path_scp_target) \
-                    for path_scp_target in path_scp_targets]
-
+            scp_targets = [self.wp.read_scp("./scp/tt_s{0}.scp".format(str(i+1))) for i in range(self.num_spks)]
 
         for key in tqdm(self.scp_mix.keys()):
             y_mix = self.wp.read_wav(self.scp_mix[key])
-
-            log_pow_mix_normalized, non_silent = self.trans(y_mix)
             Y_mix = self.wp.stft(y_mix)
-            target_mask = self.make_mask(log_pow_mix_normalized, non_silent)
+
+            logpow_mix, non_sil = self.trans(y_mix)
+            target_mask = self.est_mask(logpow_mix, non_sil)
 
             Y_separated = []
             for i in range(len(target_mask)):
@@ -151,5 +148,13 @@ if __name__ == "__main__":
     with open('config.yaml', 'r') as yml:
         config = yaml.safe_load(yml)
 
-    separation = Separation(config)
+    path_separated = "./result_test"
+    path_wav_test = sys.argv[1]
+    path_model = sys.argv[2]
+    clustering_type = sys.argv[3] # "hard" or "soft"
+    eval_idx = sys.argv[4] # "SI-SDR" or "SDR"
+
+    create_scp.test_scp(path_wav_test)
+
+    separation = Separation(config,path_wav_test,path_model,clustering_type,eval_idx)
     separation.run()

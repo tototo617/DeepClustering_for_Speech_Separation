@@ -7,7 +7,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 class wav_processor:
-    def __init__(self,config):
+    def __init__(self,config,path_model=None):
         self.n_fft = config['transform']['n_fft']
         self.hop_length = config['transform']['hop_length']
         self.win_length = config['transform']['win_length']
@@ -15,10 +15,11 @@ class wav_processor:
         self.center = config['transform']['center']
         self.sr = config['transform']['sr']
         self.mask_threshold = config['transform']['mask_threshold']
-        path_model_save = os.path.dirname(config['test']['path_model'])
-        path_normalize = path_model_save+'/dict_normalize.ark'
-        if os.path.exists(path_normalize):
-            self.normalize = pickle.load(open(path_normalize, 'rb'))
+
+        if path_model!=None:
+            path_normalize = os.path.join(os.path.dirname(path_model),'dict_normalize.ark')
+            if os.path.exists(path_normalize):
+                self.normalize = pickle.load(open(path_normalize, 'rb'))
 
     def stft(self,y):
         Y = librosa.stft(y, n_fft=self.n_fft, hop_length=self.hop_length,
@@ -26,11 +27,6 @@ class wav_processor:
                             center=self.center)
         return Y.T
 
-    def log_power(self,Y):
-        eps = np.finfo(float).eps
-        log_power =  np.log(np.maximum(np.abs(Y),eps))
-
-        return log_power
 
     def istft(self, Y):
         Y = Y.T
@@ -38,25 +34,41 @@ class wav_processor:
                             window=self.window,center=self.center)
         return y
 
-    def non_silent(self,Y):
+    def power(self,y):
+        Y = self.stft(y)
+        eps = np.finfo(float).eps
+        return np.maximum(np.abs(Y),eps)
+
+
+    def log_power(self,y,normalize=True):
+        power = self.power(y)
+        log_power =  np.log(power)
+        if normalize:
+            return (log_power - self.normalize['mean']) / self.normalize['std']
+        else:
+            return log_power
+
+
+    def non_silent(self,y):
+        Y = self.stft(y)
         eps = np.finfo(float).eps
         Y_db = 20 * np.log10(np.maximum(np.abs(Y),eps))
         max_db = np.max(Y_db)
-        min_magnitude = 10**((max_db - self.mask_threshold) / 20)
-        non_silent = np.array(Y > min_magnitude, dtype=np.float32)
+        threshold_magnitude = 10**((max_db - self.mask_threshold) / 20)
+        non_silent = np.array(Y > threshold_magnitude, dtype=np.float32)
         return non_silent
 
-    def apply_normalize(self,Y):
-        return (Y - self.normalize['mean']) / self.normalize['std']
 
     def read_wav(self,wav_path):
-        y,_ = librosa.load(wav_path, sr=self.sr)
+        y,_ = sf.read(wav_path)
         return y
+
 
     def write_wav(self,dir_path, filename, y):
         os.makedirs(dir_path, exist_ok=True)
         file_path = os.path.join(dir_path, filename)
         sf.write(file_path, y, self.sr)
+
 
     def read_scp(self,scp_path):
         files = open(scp_path, 'r')
@@ -69,8 +81,8 @@ class wav_processor:
             scp_wav[line[0]] = line[1]
         return scp_wav
 
-    def calc_sdr(self,Y,Y_hat):
 
+    def calc_sdr(self,Y,Y_hat):
         Y_sum = np.sum(np.sum((np.abs(Y))**2,1),0)
         Y_hat_sum = np.sum(np.sum((np.abs(Y_hat))**2,1),0)
         
@@ -80,6 +92,7 @@ class wav_processor:
         sdr = 10*np.log10(Y_sum/dist)
 
         return sdr
+
 
     def calc_SI_SDR(self,Y,Y_hat):
         y = self.istft(Y)
@@ -108,6 +121,7 @@ class wav_processor:
 
         return sdr
 
+
     def eval_SI_SDR(self,Y_list,Y_hat_list,Y_mix):
         num_spks = len(Y_list)
 
@@ -124,10 +138,16 @@ class wav_processor:
 
         for i in range(num_spks):
             SI_SDR_base = self.calc_SI_SDR(Y_list[i], Y_mix)
-            print(SI_SDR_base)
             SI_SDRi.append(SI_SDR[i] - SI_SDR_base)
         
-
         return SI_SDR,SI_SDRi
+
+
+if __name__ == "__main__":
+    with open('../config.yaml', 'r') as yml:
+        config = yaml.safe_load(yml)
+
+    path_model = "./checkpoint/DeepClustering_config/best.pt"
+    wp = wav_processor(config,path_model)
 
 
