@@ -14,7 +14,8 @@ import sys
 
 
 class Separation():
-    def __init__(self, config, path_wav_test, path_model, dir_mix, clustering_type, eval_idx=None):
+    def __init__(self, config, path_wav_test, path_model, clustering_type, eval_idx=None):
+        print(eval_idx)
 
         self.wp = utils.wav_processor(config,path_model)
         self.model = model.DeepClustering(config)
@@ -39,8 +40,7 @@ class Separation():
 
         os.makedirs(self.path_separated,exist_ok=True)
         self.path_csv = os.path.join(self.path_separated,"log.csv")
-        self.eval = True if eval_idx != None else False 
-        self.eval_idx = eval_idx if self.eval else None
+        self.eval_idx = eval_idx if eval_idx!=None else None
 
         with open(self.path_csv, 'w') as f:
             writer = csv.writer(f)
@@ -115,7 +115,7 @@ class Separation():
 
 
     def run(self):
-        if self.eval:
+        if self.eval_idx!=None:
             scp_targets = [self.wp.read_scp("./scp/tt_s{0}.scp".format(str(i+1))) for i in range(self.num_spks)]
 
         for key in tqdm(self.scp_mix.keys()):
@@ -129,7 +129,7 @@ class Separation():
             for i in range(len(target_mask)):
                 Y_separated.append(target_mask[i] * Y_mix)
 
-            if self.eval:
+            if self.eval_idx!=None:
                 y_targets = [self.wp.read_wav(scp_target[key]) for scp_target in scp_targets]
                 Y_targets = [self.wp.stft(y_target) for y_target in y_targets]
 
@@ -157,5 +157,5 @@ if __name__ == "__main__":
 
     create_scp.test_scp(path_wav_test,num_spks)
 
-    separation = Separation(config,path_wav_test,path_model,clustering_type,eval_idx)
+    separation = Separation(config, path_wav_test, path_model, clustering_type,eval_idx)
     separation.run()
