@@ -7,12 +7,10 @@ from tqdm import tqdm
 import logging
 import tensorboardX as tbx
 import datetime
-from pytorch_memlab import MemReporter
 
 class Trainer():
     def __init__(self,model,config):
         self.model = model
-        self.reporter = MemReporter(self.model)
         self.cur_epoch = 0
         self.config = config
         self.num_spks = config['num_spks']
