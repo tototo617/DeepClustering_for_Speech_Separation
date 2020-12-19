@@ -130,6 +130,9 @@ class Trainer():
 
         self.model.to(self.device)
 
+        with open(os.path.join(self.checkpoint,'config.yaml'),mode='w') as f:
+            f.write(yaml.dump(data))
+
 
     def load_checkpoint(self,config):
         print('load on:',self.device)
