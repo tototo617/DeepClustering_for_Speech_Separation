@@ -7,6 +7,7 @@ import sys
 from Learning import model
 from Learning.trainer import Trainer
 from Learning.dataloader import make_dataloader
+import datetime
 
 
 
@@ -21,8 +22,13 @@ def train():
         
     dpcl = model.DeepClustering(config)
 
+    dt_now = datetime.datetime.now()
+
+    time = str(dt_now.isoformat())
+    print(time)
+
     create_scp.train_scp(path_wav_train,num_spks)
-    calc_normalize_params.dump_dict(config)
+    calc_normalize_params.dump_dict(config,time)
     
 
     if config['train']['resume']['state']: 
@@ -39,7 +45,7 @@ def train():
     train_dataloader = make_dataloader(config, path_scp_mix_tr, path_scp_targets_tr, path_model)
     valid_dataloader = make_dataloader(config, path_scp_mix_cv, path_scp_targets_cv, path_model)
 
-    trainer = Trainer(dpcl, config)
+    trainer = Trainer(dpcl, config, time)
 
     trainer.run(train_dataloader, valid_dataloader)
 

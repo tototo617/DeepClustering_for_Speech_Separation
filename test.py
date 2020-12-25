@@ -63,19 +63,13 @@ class Separation():
 
 
     def est_mask(self, wave, non_silent):
-        '''
-            input: T x F
-        '''
-        # TF x D
-
-
+        
         mix_emb = self.model(torch.tensor(
             wave, dtype=torch.float32), is_train=False)
         mix_emb = mix_emb.detach().numpy()
         # N x D
         T, F = non_silent.shape
         non_silent = non_silent.reshape(-1)
-        # print(non_silent)
         # mix_emb = (mix_emb.T*non_silent).T
         # N
         targets_mask = []
@@ -140,6 +134,18 @@ class Separation():
                 y_separated_i = self.wp.istft(Y_separated_i)
                 self.wp.write_wav(self.path_separated+'/separated',key.replace('.wav','') + '_'
                                     + str(i+1) + '.wav',y_separated_i)
+
+        with open(self.path_csv, 'r') as f:
+            reader = csv.reader(f)
+            result = [np.array(row[1:]) for row in reader]
+            result = np.asarray(result[2:],dtype='float32')
+            
+            result_mean = np.mean(result,axis=0)
+
+        with open(self.path_csv, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(['mean',result_mean])
+            writer.writerow(['mean SI-SDR',np.mean(result_mean[0:2]), 'mean SI-SDRi',np.mean(result_mean[2:4])])
 
 
 
