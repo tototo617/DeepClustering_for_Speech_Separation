@@ -9,7 +9,7 @@ import tensorboardX as tbx
 import datetime
 
 class Trainer():
-    def __init__(self,model,config):
+    def __init__(self,model,config,time):
         self.model = model
         self.cur_epoch = 0
         self.config = config
@@ -18,6 +18,8 @@ class Trainer():
         self.early_stop = config['train']['early_stop']
         self.checkpoint = config['train']['path']
         self.name = config['name']
+
+        self.time = time
 
         # setting about optimizer
         opt_name = config['train']['optim']['name']
@@ -76,8 +78,7 @@ class Trainer():
         val_loss = []
         print('cur_epoch',self.cur_epoch)
 
-        dt_now = datetime.datetime.now()
-        writer = tbx.SummaryWriter("tbx/" + dt_now.isoformat())
+        writer = tbx.SummaryWriter("tbx/" + self.time)
         os.makedirs('./checkpoint/DeepClustering_config',exist_ok=True)
         logging.basicConfig(filename='./checkpoint/DeepClustering_config/train_log.log', level=logging.DEBUG)
         logging.info(self.config)
@@ -119,16 +120,20 @@ class Trainer():
         self.model.to('cpu')
         print('save model epoch:{0} as {1}'.format(epoch,"best" if best else "last"))
         os.makedirs(os.path.join(self.checkpoint,self.name),exist_ok=True)
+
+        path_save_model = os.path.join(self.checkpoint,self.name,self.time,
+                                            '{0}.pt'.format('best' if best else 'last'))
+
         torch.save({
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
             'optim_state_dict': self.optimizer.state_dict()
         },
-        os.path.join(self.checkpoint,self.name,'{0}.pt'.format('best' if best else 'last')))
+        path_save_model)
 
         self.model.to(self.device)
 
-        with open(os.path.join(self.checkpoint,self.name,'config_backup.yaml'),mode='w') as f:
+        with open(os.path.join(self.checkpoint,self.name,self.time,'config_backup.yaml'),mode='w') as f:
             f.write(yaml.dump(self.config))
 
 

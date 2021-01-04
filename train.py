@@ -34,7 +34,7 @@ def train():
     if config['train']['resume']['state']: 
         path_model = config['train']['resume']['path']
     else:
-        path_model = "./checkpoint/DeepClustering_config/xx.pt"
+        path_model = "./checkpoint/DeepClustering_config/"+time+"/xx.pt"
 
     path_scp_mix_tr = "./scp/tr_mix.scp"
     path_scp_targets_tr = ["./scp/tr_s{0}.scp".format(str(i+1)) for i in range(config["num_spks"])]
