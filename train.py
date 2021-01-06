@@ -19,6 +19,8 @@ def train():
     with open('config.yaml', 'r') as yml:
         config = yaml.safe_load(yml)
         num_spks = config['num_spks']
+
+    config['path_wav_train'] = path_wav_train
         
     dpcl = model.DeepClustering(config)
 
@@ -31,10 +33,7 @@ def train():
     calc_normalize_params.dump_dict(config,time)
     
 
-    if config['train']['resume']['state']: 
-        path_model = config['train']['resume']['path']
-    else:
-        path_model = "./checkpoint/DeepClustering_config/"+time+"/xx.pt"
+    path_model = "./checkpoint/DeepClustering_config/"+time+"/xx.pt"
 
     path_scp_mix_tr = "./scp/tr_mix.scp"
     path_scp_targets_tr = ["./scp/tr_s{0}.scp".format(str(i+1)) for i in range(config["num_spks"])]
